@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
             case 2:
                 return ProjectType.EMBEDDED;
             default:
-                return ProjectType.SEMI_DETACHED;
+                return ProjectType.ORGANIC;
         }
     }
 
