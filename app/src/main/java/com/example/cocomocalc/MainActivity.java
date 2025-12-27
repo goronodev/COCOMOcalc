@@ -10,122 +10,188 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    private Button btnCalculate;
-    private Spinner spinnerModel;
+    private Spinner spinnerCocomoModel;
     private Spinner spinnerProjectType;
     private EditText etKloc;
+    private Button btnCalculate;
     private TextView tvResult;
     private LinearLayout layoutCostDrivers;
+    private LinearLayout layoutScaleFactors;
+    private RecyclerView rvScaleFactors;
+    private List<CostDriver> scaleFactorsList = new ArrayList<>();
 
+
+    private final List<CostDriver> allCostDrivers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        initViews();
+        initSpinners();
+        initCostDrivers();
+        initListeners();
+        toggleCostDriversVisibility(false);
+    }
+
+    private void initViews() {
+        spinnerCocomoModel = findViewById(R.id.spinnerModel);
+        spinnerProjectType = findViewById(R.id.spinnerProjectType);
         etKloc = findViewById(R.id.etKloc);
-        tvResult = findViewById(R.id.tvResult);
         btnCalculate = findViewById(R.id.btnCalculate);
         layoutCostDrivers = findViewById(R.id.layoutCostDrivers);
-        spinnerModel = findViewById(R.id.spinnerModel);
-        spinnerProjectType = findViewById(R.id.spinnerProjectType);
+        tvResult = findViewById(R.id.tvResult);
+        layoutScaleFactors = findViewById(R.id.layoutScaleFactors);
+        rvScaleFactors = findViewById(R.id.rvScaleFactors);
+        rvScaleFactors.setLayoutManager(new LinearLayoutManager(this));
+    }
 
-        ArrayAdapter<CharSequence> modelAdapter =
-                ArrayAdapter.createFromResource(
-                        this,
-                        R.array.cocomo_models,
-                        android.R.layout.simple_spinner_item
-                );
+    private void initSpinners() {
+
+        ArrayAdapter<String> modelAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[]{
+                        "Basic COCOMO",
+                        "Intermediate COCOMO",
+                        "COCOMO II (Post-Arch)"
+                }
+        );
         modelAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
+        spinnerCocomoModel.setAdapter(modelAdapter);
 
-        spinnerModel.setAdapter(modelAdapter);
-        ArrayAdapter<CharSequence> projectTypeAdapter =
-                ArrayAdapter.createFromResource(
-                        this,
-                        R.array.project_types,
-                        android.R.layout.simple_spinner_item
-                );
-
+        // Project type spinner
+        ArrayAdapter<String> projectTypeAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[]{
+                        "Распространённый",
+                        "Полузависимый",
+                        "Встроенный"
+                }
+        );
         projectTypeAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
         spinnerProjectType.setAdapter(projectTypeAdapter);
+    }
 
-        spinnerModel.setOnItemSelectedListener(
+    private void initCostDrivers() {
+
+        RecyclerView rvProduct = findViewById(R.id.rvProductAttributes);
+        RecyclerView rvHardware = findViewById(R.id.rvHardwareAttributes);
+        RecyclerView rvPersonnel = findViewById(R.id.rvPersonnelAttributes);
+        RecyclerView rvProject = findViewById(R.id.rvProjectAttributes);
+
+        rvProduct.setLayoutManager(new LinearLayoutManager(this));
+        rvHardware.setLayoutManager(new LinearLayoutManager(this));
+        rvPersonnel.setLayoutManager(new LinearLayoutManager(this));
+        rvProject.setLayoutManager(new LinearLayoutManager(this));
+
+        List<CostDriver> product =
+                CostDriverFactory.createProductAttributes();
+        List<CostDriver> hardware =
+                CostDriverFactory.createHardwareAttributes();
+        List<CostDriver> personnel =
+                CostDriverFactory.createPersonnelAttributes();
+        List<CostDriver> project =
+                CostDriverFactory.createProjectAttributes();
+
+        rvProduct.setAdapter(new CostDriverAdapter(product));
+        rvHardware.setAdapter(new CostDriverAdapter(hardware));
+        rvPersonnel.setAdapter(new CostDriverAdapter(personnel));
+        rvProject.setAdapter(new CostDriverAdapter(project));
+
+        allCostDrivers.clear();
+        allCostDrivers.addAll(product);
+        allCostDrivers.addAll(hardware);
+        allCostDrivers.addAll(personnel);
+        allCostDrivers.addAll(project);
+    }
+
+    private void initListeners() {
+
+        spinnerCocomoModel.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
-
                     @Override
-                    public void onItemSelected(AdapterView<?> parent,
-                                               View view,
-                                               int position,
-                                               long id) {
+                    public void onItemSelected(
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
+                            long id) {
 
-                        if (position == 1) {
-                            //disableProjectTypeSpinner();
-                            layoutCostDrivers.setVisibility(View.VISIBLE);
-                        } else {
-                            //enableProjectTypeSpinner();
-                            layoutCostDrivers.setVisibility(View.GONE);
-                        }
+                        boolean isIntermediate = position == 1;
+                        //spinnerProjectType.setEnabled(!isIntermediate);
+                        toggleCostDriversVisibility(isIntermediate);
                     }
 
                     @Override
-                    public void onNothingSelected(AdapterView<?> parent) {}
-                });
+                    public void onNothingSelected(
+                            AdapterView<?> parent) {}
+                }
+        );
 
-
-        btnCalculate.setOnClickListener(v -> {
-            double kloc = Double.parseDouble(etKloc.getText().toString());
-            ProjectType type = ProjectType.ORGANIC;
-
-            CocomoResult result =
-                    CocomoBasicCalc.calculate(kloc, type);
-
-        });
-
-        btnCalculate.setOnClickListener(v -> {
-
-            double kloc = Double.parseDouble(etKloc.getText().toString());
-
-            String model = getSelectedModel();
-            ProjectType type = getSelectedProjectType();
-
-            CocomoResult result = null;
-
-            if (model == "BASIC") {
-                result = CocomoBasicCalc.calculate(kloc, type);
-            } else {
-                double eaf = calculateEAF();
-                result = CocomoIntermediateCalc.calculate(kloc, type, eaf);
-            }
-
-            tvResult.setText(
-                    "Трудоёмкость: " + String.format("%.2f", result.effort) + " чел-мес\n" +
-                            "Сроки: " + String.format("%.2f", result.time) + " мес\n" +
-                            "Команда: " + String.format("%.2f", result.people) + " чел"
-            );
-        });
+        btnCalculate.setOnClickListener(v -> calculate());
     }
 
 
-    ProjectType getSelectedProjectType() {
-        int position = spinnerProjectType.getSelectedItemPosition();
+    private void calculate() {
 
-        switch (position) {
+        if (etKloc.getText().toString().isEmpty()) {
+            tvResult.setText("Введите размер проекта (KLOC)");
+            return;
+        }
+
+        double kloc = Double.parseDouble(etKloc.getText().toString());
+
+        boolean isIntermediate =
+                spinnerCocomoModel.getSelectedItemPosition() == 1;
+
+        ProjectType projectType = getSelectedProjectType();
+
+        CocomoResult result;
+
+        if (isIntermediate) {
+            double eaf = calculateEAF();
+
+            result = CocomoIntermediateCalc.calculate(
+                    kloc,
+                    projectType,
+                    eaf
+            );
+
+        } else {
+            result = CocomoBasicCalc.calculate(
+                    kloc,
+                    projectType
+            );
+        }
+
+        tvResult.setText(
+                String.format(
+                        "Трудоёмкость: %.2f чел.-мес.\n" +
+                                "Срок разработки: %.2f мес.\n" +
+                                "Численность команды: %.2f чел.",
+                        result.effort,
+                        result.time,
+                        result.people
+                )
+        );
+    }
+
+    private ProjectType getSelectedProjectType() {
+
+        switch (spinnerProjectType.getSelectedItemPosition()) {
             case 0:
                 return ProjectType.ORGANIC;
             case 1:
@@ -133,30 +199,23 @@ public class MainActivity extends AppCompatActivity {
             case 2:
                 return ProjectType.EMBEDDED;
             default:
-                return ProjectType.ORGANIC;
-        }
-    }
-    String getSelectedModel() {
-        int position = spinnerModel.getSelectedItemPosition();
-
-        switch (position) {
-            case 0:
-                return "BASIC";
-            case 1:
-                return "INTERMEDIATE";
-            default:
-                return "BASIC";
+                return ProjectType.SEMI_DETACHED;
         }
     }
 
-   /* private double calculateEAF(List<CostDriver> drivers) {
+
+    private double calculateEAF() {
         double eaf = 1.0;
-
-        for (CostDriver driver : drivers) {
-            eaf *= driver.getSelectedValue();
+        for (CostDriver d : allCostDrivers) {
+            eaf *= d.getSelectedValue();
         }
-
         return eaf;
-    }*/
+    }
 
+    private void toggleCostDriversVisibility(boolean visible) {
+        layoutCostDrivers.setVisibility(
+                visible ? View.VISIBLE : View.GONE
+        );
+    }
 }
+

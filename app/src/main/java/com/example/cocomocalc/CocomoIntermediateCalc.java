@@ -1,14 +1,6 @@
 package com.example.cocomocalc;
 
 public class CocomoIntermediateCalc {
-    /**
-     * Расчёт Intermediate COCOMO с учётом типа проекта
-     *
-     * @param kloc размер ПО (KLOC)
-     * @param projectType тип проекта (Organic, Semi-detached, Embedded)
-     * @param eaf Effort Adjustment Factor
-     * @return результат расчёта
-     */
     public static CocomoResult calculate(double kloc,
                                          ProjectType projectType,
                                          double eaf) {
