@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">COCOMOcalc</string>
+
+    <string-array name="cocomo_models">
+        <item>Basic COCOMO</item>
+        <item>Intermediate COCOMO</item>
+    </string-array>
+
+    <string-array name="project_types">
+        <item>Organic</item>
+        <item>Semi-detached</item>
+        <item>Embedded</item>
+    </string-array>
+
+</resources>
