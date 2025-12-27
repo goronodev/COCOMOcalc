@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnCalculate;
     private TextView tvResult;
     private LinearLayout layoutCostDrivers;
-    private LinearLayout layoutScaleFactors;
+    private TextView labelScaleFactors;
     private RecyclerView rvScaleFactors;
     private List<CostDriver> scaleFactorsList = new ArrayList<>();
 
@@ -51,9 +51,10 @@ public class MainActivity extends AppCompatActivity {
         btnCalculate = findViewById(R.id.btnCalculate);
         layoutCostDrivers = findViewById(R.id.layoutCostDrivers);
         tvResult = findViewById(R.id.tvResult);
-        layoutScaleFactors = findViewById(R.id.layoutScaleFactors);
+        labelScaleFactors = findViewById(R.id.labelScaleFactors);
         rvScaleFactors = findViewById(R.id.rvScaleFactors);
         rvScaleFactors.setLayoutManager(new LinearLayoutManager(this));
+
     }
 
     private void initSpinners() {
@@ -124,15 +125,19 @@ public class MainActivity extends AppCompatActivity {
         spinnerCocomoModel.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
                     @Override
-                    public void onItemSelected(
-                            AdapterView<?> parent,
-                            View view,
-                            int position,
-                            long id) {
-
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        boolean isBasic = position == 0;
                         boolean isIntermediate = position == 1;
-                        //spinnerProjectType.setEnabled(!isIntermediate);
-                        toggleCostDriversVisibility(isIntermediate);
+                        boolean isCocomo2 = position == 2;
+
+                        spinnerProjectType.setEnabled(!isCocomo2);
+
+                        toggleCostDriversVisibility(isIntermediate || isCocomo2);
+
+                        rvScaleFactors.setVisibility(isCocomo2 ? View.VISIBLE : View.GONE);
+                        labelScaleFactors.setVisibility(isCocomo2 ? View.VISIBLE : View.GONE);
+
+                        reloadCostDriversData(isCocomo2);
                     }
 
                     @Override
@@ -153,15 +158,21 @@ public class MainActivity extends AppCompatActivity {
         }
 
         double kloc = Double.parseDouble(etKloc.getText().toString());
-
-        boolean isIntermediate =
-                spinnerCocomoModel.getSelectedItemPosition() == 1;
-
         ProjectType projectType = getSelectedProjectType();
+        CocomoResult result = null;
+        int selectedModelIndex = spinnerCocomoModel.getSelectedItemPosition();
 
-        CocomoResult result;
+        if (selectedModelIndex == 2) {
+            double eaf = calculateEAF();
 
-        if (isIntermediate) {
+            result = Cocomo2Calc.calculate(
+                    kloc,
+                    scaleFactorsList,
+                    eaf
+            );
+
+        }
+        if (selectedModelIndex == 1) {
             double eaf = calculateEAF();
 
             result = CocomoIntermediateCalc.calculate(
@@ -170,7 +181,8 @@ public class MainActivity extends AppCompatActivity {
                     eaf
             );
 
-        } else {
+        }
+        if (selectedModelIndex == 0){
             result = CocomoBasicCalc.calculate(
                     kloc,
                     projectType
@@ -216,6 +228,53 @@ public class MainActivity extends AppCompatActivity {
         layoutCostDrivers.setVisibility(
                 visible ? View.VISIBLE : View.GONE
         );
+    }
+    private void reloadCostDriversData(boolean isCocomo2) {
+        allCostDrivers.clear();
+
+        RecyclerView rvProduct = findViewById(R.id.rvProductAttributes);
+        RecyclerView rvHardware = findViewById(R.id.rvHardwareAttributes);
+        RecyclerView rvPersonnel = findViewById(R.id.rvPersonnelAttributes);
+        RecyclerView rvProject = findViewById(R.id.rvProjectAttributes);
+
+
+
+        if (isCocomo2) {
+
+            scaleFactorsList.clear();
+            scaleFactorsList.addAll(CostDriverFactory.createCocomo2ScaleFactors());
+
+            if (rvScaleFactors.getAdapter() == null) {
+                rvScaleFactors.setAdapter(new CostDriverAdapter(scaleFactorsList));
+            } else {
+                rvScaleFactors.getAdapter().notifyDataSetChanged();
+            }
+            List<CostDriver> c2Drivers = CostDriverFactory.createCocomo2EffortMultipliers();
+
+            allCostDrivers.addAll(c2Drivers);
+
+            List<CostDriver> productDrivers = new ArrayList<>(c2Drivers.subList(0, 5));   // RELY, DATA, CPLX, RUSE, DOCU
+            List<CostDriver> platformDrivers = new ArrayList<>(c2Drivers.subList(5, 8));  // TIME, STOR, PVOL
+            List<CostDriver> personnelDrivers = new ArrayList<>(c2Drivers.subList(8, 14)); // ACAP, PCAP, PCON, AEXP, PEXP, LTEX
+            List<CostDriver> projectDrivers = new ArrayList<>(c2Drivers.subList(14, 17)); // TOOL, SITE, SCED
+
+            rvProduct.setAdapter(new CostDriverAdapter(productDrivers));
+            rvHardware.setAdapter(new CostDriverAdapter(platformDrivers));
+            rvPersonnel.setAdapter(new CostDriverAdapter(personnelDrivers));
+            rvProject.setAdapter(new CostDriverAdapter(projectDrivers));
+
+            rvProduct.setVisibility(View.VISIBLE);
+            rvHardware.setVisibility(View.VISIBLE);
+            rvPersonnel.setVisibility(View.VISIBLE);
+            rvProject.setVisibility(View.VISIBLE);
+
+        } else {
+            initCostDrivers();
+            rvProduct.setVisibility(View.VISIBLE);
+            rvHardware.setVisibility(View.VISIBLE);
+            rvPersonnel.setVisibility(View.VISIBLE);
+            rvProject.setVisibility(View.VISIBLE);
+        }
     }
 }
 

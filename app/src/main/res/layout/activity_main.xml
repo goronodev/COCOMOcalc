@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -68,41 +68,31 @@
             android:layout_marginTop="16dp"
             android:visibility="gone">
 
-            <LinearLayout
-                android:id="@+id/layoutScaleFactors"
+
+            <TextView
+                android:id="@+id/labelScaleFactors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
+                android:layout_marginBottom="8dp"
+                android:text="Факторы масштаба"
+                android:textAlignment="center"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Факторы масштаба"
-                    android:textStyle="bold"
-                    android:textAlignment="center"
-                    android:textColor="@android:color/holo_blue_dark"
-                    android:layout_marginBottom="8dp"/>
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvScaleFactors"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#CCCCCC"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"/>
-            </LinearLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvScaleFactors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
 
             <!-- Product Attributes -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@android:color/holo_blue_dark"
                 android:text="Характеристики продукта"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:textAlignment="center"/>
 
@@ -117,7 +107,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                android:textColor="@android:color/holo_blue_dark"
                 android:text="Характеристики аппаратного обеспечения"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:textAlignment="center"/>
 
@@ -133,7 +125,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:textAlignment="center"
+                android:textColor="@android:color/holo_blue_dark"
                 android:text="Характеристики персонала"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -147,7 +141,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                android:textColor="@android:color/holo_blue_dark"
                 android:text="Характеристики проекта"
+                android:textSize="20sp"
                 android:textAlignment="center"
                 android:textStyle="bold" />
 
@@ -181,4 +177,4 @@
             android:layout_marginBottom="50dp"/>
 
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>
