@@ -16,14 +16,12 @@ public class CostDriver {
         this.code = code;
         this.name = name;
         this.levels = levels;
-
-        // По умолчанию выбираем "Средний" (Nominal = 1.00), если есть
         selectNominalIfExists();
     }
 
     private void selectNominalIfExists() {
         for (int i = 0; i < levels.size(); i++) {
-            if (levels.get(i).getValue() == 1.00) {
+            if (levels.get(i).getLabel() == "Средний") {
                 selectedLevelIndex = i;
                 return;
             }
